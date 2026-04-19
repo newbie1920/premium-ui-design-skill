@@ -224,6 +224,13 @@ Dùng cho: CTA buttons, Hero panels, Featured overlays.
 
 ## 5. Video Background — Tất cả kỹ thuật
 
+### 5.0 Auto-Generate Video Background với Hyperframes (AI Driven)
+> **Tư duy tối ưu:** Thay vì lên mạng tìm kiếm các đoạn video nền (stock footage) không khớp màu với Brand Color, hãy yêu cầu AI tự lập trình và Generate thẳng ra video 60fps hoàn hảo.
+- **Bước 1 (Trong Terminal):** `npx hyperframes init my-bg-video`
+- **Bước 2 (Prompt AI):** "Viết file HTML dùng thư viện GSAP/Lottie tạo một hiệu ứng background [lưới sương mù / ánh sáng cực quang / hạt phân tử] mượt mà dài 10 giây chuẩn màu [mã Hex màu] bằng Hyperframes"
+- **Bước 3 (Trong Terminal):** `npx hyperframes render` (Xuất thẳng ra file `.mp4` nhờ FFmpeg)
+- **Bước 4 (Trong Code):** Lắp file video vừa sinh ra vào thẻ `<video>` ở mục 5.1 bên dưới cùng `mix-blend-mode` siêu đẹp.
+
 ### 5.1 Video MP4 đơn giản (phổ biến nhất)
 ```jsx
 <video
