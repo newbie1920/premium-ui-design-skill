@@ -1,6 +1,16 @@
-# Skill: Premium Cinematic UI Design — Complete Reference
+# 🎨 Premium Cinematic UI Design Skill — v2.0 Pro Edition
+
+> **Version:** 2.0 Pro · **Updated:** 2026-04-19 · **Category:** UI/UX Design  
+> **Changelog v2.0:** Added version metadata, cross-skill integration hooks, consistent formatting with skill suite.
 
 > Khi người dùng yêu cầu thiết kế UI/UX cho bất kỳ dự án nào, hãy tuân thủ triệt để mọi kỹ thuật trong file này.
+
+**Cross-skill Integration:**
+- Design system tokens → **Snippet Factory** `snip:css-tokens` auto-generates matching CSS variables
+- Component hierarchy → **Architecture Planner** validates against blueprint
+- UI implementation → **Code Review** checks accessibility (WCAG AA) + performance (animate only transform/opacity)
+- Design decisions → **Smart Docs Generator** exports to thesis Chapter 3 (Thiết kế giao diện)
+- Design prompt → **Prompt Enhancer** auto-selects `DESIGN_TEMPLATE` with visual direction
 
 ---
 
