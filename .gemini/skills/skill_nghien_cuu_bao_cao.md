@@ -110,8 +110,10 @@ flowchart TD
     A[📂 Quét Toàn Bộ Thư Mục] --> B{Phân Loại Dự Án}
     B --> C[🔧 Hardware: GPIO, Sensor, Schematic]
     B --> D[💻 Software: API, DB, Frontend, Firmware]
-    C --> E[⚡ Trích Xuất Toán & Vật Lý]
+    B --> RAG[📚 Xử Lý PDF/Sách Bằng BookRAG]
+    C --> E[⚡ Trích Xuất Kiến Thức & Toán]
     D --> E
+    RAG --> E
     E --> F[📊 Sinh 4 Sơ Đồ Mermaid]
     F --> G[📝 Lắp Ráp Nội Dung 6 Chương]
     G --> H[🐍 Sinh Python Script → DOCX]
@@ -119,6 +121,7 @@ flowchart TD
     style H fill:#1b5e20,color:#fff
     style A fill:#0d47a1,color:#fff
     style B fill:#e65100,color:#fff
+    style RAG fill:#8e24aa,color:#fff
 ```
 
 ### Bước 1: Lập Bản Đồ Kiến Thức (Knowledge Map) — ĐỌC THẬT SÂU
@@ -243,6 +246,22 @@ Chỉ hỏi user khi đã đọc code mà VẪN KHÔNG TÌM THẤY:
 | KQ thực nghiệm chưa có | "Số liệu đo được thực tế: latency, FPS, độ chính xác?" |
 | Loại đồ án chưa rõ | "Loại đồ án: Tốt nghiệp hay Tổng hợp?" (bắt buộc hỏi) |
 | Không thấy test result | "Đã test hệ thống chưa? Có video/ảnh demo không?" |
+
+#### 1F. Xử Lý Tài Liệu Lý Thuyết Dài (Tích hợp BookRAG)
+
+Khi dự án yêu cầu viết **Chương 2 (Cơ sở lý thuyết)** sâu, dựa trên PDF/Sách hoặc các bài báo khoa học (nơi RAG thường gặp lỗi mất ngữ cảnh), AI **BẮT BUỘC** sử dụng **BookRAG (Hierarchical Structure-aware Index)**.
+
+> 💡 **Khái niệm "Nuốt trong 10 giây" để AI hiểu rõ mục đích:**
+> - **Ý chính:** BookRAG thay vì "băm nhỏ" tài liệu vô tội vạ, nó tổ chức tài liệu theo đúng cấu trúc cuốn sách (chapter, section, logic flow).
+> - **Điểm hay:** Giữ được ngữ cảnh dài hạn, dễ dàng xử lý PDF/Sách phức tạp. Hiệu quả tăng gấp đôi RAG truyền thống.
+> - **Nói dễ hiểu:** RAG cũ = *"xé sách ra từng trang rồi đoán"*, BookRAG = *"đọc cả chương rồi mới trả lời"* → thông minh và chính xác hơn hẳn.
+
+**Quy trình sử dụng BookRAG:**
+1. **Tiếp nhận PDF:** Yêu cầu user cung cấp tài liệu lý thuyết gốc (PDF) hoặc link tải.
+2. **Setup Colab (Rule Số 4):** Do MinerU và BookRAG nặng, hệ thống PHẢI ưu tiên đẩy tác vụ lập Offline Index lên Google Colab (qua `google-colab` MCP).
+3. **Trích xuất thông minh:**
+   - Truy vấn BookRAG theo tổ chức chương/mục (Đọc cả chương mới tóm tắt!).
+   - Đắp nội dung lấy được thẳng vào Chương 2 & 4 đi kèm lý do kỹ thuật.
 
 ---
 
@@ -1924,54 +1943,85 @@ def tao_bao_cao_tdtu(ten_de_tai, sinh_vien, mssv, gvhd, chuyen_nganh,
     create_bia_lot(doc, ten_de_tai, gvhd)
     doc.add_page_break()
 
-    # ===== 6. CAM ĐOAN (trang iii) =====
+    # ===== 6. LỜI CẢM ƠN (trang iii) =====
+    p = doc.add_paragraph('LỜI CẢM ƠN')
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = p.runs[0]; run.font.name = 'Times New Roman'
+    run.font.size = Pt(16); run.font.bold = True
+    doc.add_paragraph()
+    lco_body = (
+        f'    Tôi xin chân thành cảm ơn Quý Thầy/Cô Trường Đại học Tôn Đức Thắng '
+        f'đã truyền đạt những kiến thức nền tảng vô cùng quý báu trong suốt những năm học vừa qua.\n\n'
+        f'    Đặc biệt, tôi xin gửi lời tri ân sâu sắc đến {gvhd} — người đã tận tình '
+        f'hướng dẫn, định hướng và hỗ trợ tôi trong suốt quá trình thực hiện đề tài.\n\n'
+        f'    Xin cảm ơn gia đình và bạn bè đã luôn động viên, tạo điều kiện để tôi hoàn thành tốt đồ án này.'
+    )
+    p = doc.add_paragraph(lco_body)
+    p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    run = p.runs[0]; run.font.name = 'Times New Roman'; run.font.size = Pt(13)
+    doc.add_paragraph()
+    for sig in ['TP. Hồ Chí Minh, ngày    tháng    năm', 'Tác giả', '(Ký tên và ghi rõ họ tên)']:
+        p = doc.add_paragraph(sig)
+        p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        run = p.runs[0]; run.font.name = 'Times New Roman'
+        run.font.size = Pt(13); run.font.italic = True
+    doc.add_page_break()
+
+    # ===== 7 & 8. CÔNG TRÌNH ĐƯỢC HOÀN THÀNH (2 trang: iv + v) =====
+    # Trang iv: Hội đồng xác nhận (create_bia_lot style 2)
+    # Trang v:  Cam đoan tác giả (create_cam_doan)
     create_cam_doan(doc, sinh_vien)
     doc.add_page_break()
 
-    # ===== 7. NHIỆM VỤ ĐỒ ÁN (trang iv) =====
+    # ===== 9. TRANG ĐÍNH KÈM NHIỆM VỤ GVHD (trang vi) =====
     create_nhiem_vu_da(doc)
     doc.add_page_break()
 
-    # ===== 8. LỊCH TRÌNH LÀM ĐỒ ÁN (trang v-vi) =====
+    # ===== 10. LỊCH TRÌNH LÀM ĐỒ ÁN (trang vii - viii) =====
     create_lich_trinh_da(doc, ten_de_tai, sinh_vien, mssv, chuyen_nganh)
     doc.add_page_break()
 
-    # ===== 9. TÓM TẮT (trang vii) =====
+    # ===== 11. TÊN ĐỀ TÀI & TÓM TẮT =====
     create_tom_tat(doc, ten_de_tai)
     doc.add_page_break()
 
-    # ===== 10. LỜI CẢM ƠN =====
-    doc.add_heading('LỜI CẢM ƠN', level=1)
-    doc.add_paragraph(
-        f'    Tôi xin chân thành cảm ơn {gvhd} đã tận tình hướng dẫn và hỗ trợ tôi '
-        f'trong suốt quá trình thực hiện đề tài. Xin cảm ơn!'
-    )
-    doc.add_page_break()
-
-    # ===== 11. MỤC LỤC (TRƯỚC 3 danh mục) =====
+    # ===== 12. MỤC LỤC =====
     add_toc(doc, title='MỤC LỤC')
     doc.add_page_break()
 
-    # ===== 12. DANH MỤC HÌNH VẼ (Word TOF field) =====
+    # ===== 13. DANH MỤC HÌNH VẼ (Word TOF field) =====
     _add_list_of_figures(doc)
     doc.add_page_break()
 
-    # ===== 13. DANH MỤC BẢNG BIỂU (Word TOF field) =====
+    # ===== 14. DANH MỤC BẢNG BIỂU (Word TOF field) =====
     _add_list_of_tables(doc)
     doc.add_page_break()
 
-    # ===== 14. DANH MỤC CHỮ VIẾT TẮT =====
-    doc.add_heading('DANH MỤC CÁC CHỮ VIẾT TẮT', level=1)
-    abbr_table = doc.add_table(rows=1, cols=2)
+    # ===== 15. DANH MỤC CÁC CHỮ VIẾT TẮT =====
+    p = doc.add_paragraph('DANH MỤC CÁC CHỮ VIẾT TẮT')
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = p.runs[0]; run.font.name = 'Times New Roman'
+    run.font.size = Pt(16); run.font.bold = True
+    doc.add_paragraph()
+    abbr_table = doc.add_table(rows=1, cols=3)
     abbr_table.style = 'Table Grid'
-    abbr_table.rows[0].cells[0].text = 'Viết tắt'
-    abbr_table.rows[0].cells[1].text = 'Nghĩa đầy đủ'
-    row = abbr_table.add_row()
-    row.cells[0].text = 'MCU'; row.cells[1].text = 'Microcontroller Unit'
+    hdr_cells = abbr_table.rows[0].cells
+    for i, txt in enumerate(['Viết tắt', 'Tiếng Anh / Tiếng Việt đầy đủ', 'Nghĩa']):
+        hdr_cells[i].text = txt
+        r = hdr_cells[i].paragraphs[0].runs[0]
+        r.font.bold = True; r.font.name = 'Times New Roman'; r.font.size = Pt(13)
+    for abbr, full, meaning in [
+        ('MCU', 'Microcontroller Unit', 'Vi điều khiển'),
+        ('MQTT', 'Message Queuing Telemetry Transport', 'Giao thức truyền tin IoT nhẹ'),
+        ('REST', 'Representational State Transfer', 'Kiến trúc API web'),
+        ('JSON', 'JavaScript Object Notation', 'Định dạng dữ liệu'),
+        ('GPIO', 'General Purpose Input/Output', 'Chân I/O đa năng'),
+    ]:
+        row = abbr_table.add_row().cells
+        row[0].text = abbr; row[1].text = full; row[2].text = meaning
     doc.add_page_break()
 
-    # ===== 13. NỘI DUNG CHƯƠNG 1 =====
-    # SECTION BREAK: Chuyển từ La Mã → Ả Rập bắt đầu từ trang 1
+    # ===== 16. NỘI DUNG — ĐỔI SECTION: SỐ TRANG Ả RẬP + HEADER + FOOTER =====
     add_section_break_before_chapter1(doc, loai_do_an, ten_de_tai)
     doc.add_heading('CHƯƠNG 1. GIỚI THIỆU ĐỀ TÀI', level=1)
     
